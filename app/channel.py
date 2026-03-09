@@ -130,9 +130,22 @@ class Channel:
         self.probe_cache[file_path] = (mtime, signature)
         return signature
 
+    @staticmethod
+    def _format_signature(sig: tuple[Any, ...]) -> str:
+        """Format a probe signature tuple as a human-readable string."""
+        labels = ('vcodec', 'width', 'height', 'pix_fmt', 'fps', 'acodec', 'sample_rate', 'audio_ch')
+        return ' | '.join(f'{label}={value}' for label, value in zip(labels, sig))
+
     def filter_copy_compatible_files(self, files: list[str]) -> tuple[list[str], list[str]]:
         """Keep the largest set of files that can be concatenated in copy mode."""
         if len(files) < 2:
+            if files:
+                sig = self.probe_signature(files[0])
+                name = Path(files[0]).name
+                if sig is not None:
+                    logger.info(f"[{self.name}] {name}: {self._format_signature(sig)}")
+                else:
+                    logger.warning(f"[{self.name}] {name}: probe failed")
             return files, []
 
         by_signature: dict[tuple[Any, ...], int] = {}
@@ -140,13 +153,21 @@ class Channel:
         for file_path in files:
             signature = self.probe_signature(file_path)
             signatures_by_file[file_path] = signature
+            name = Path(file_path).name
             if signature is not None:
                 by_signature[signature] = by_signature.get(signature, 0) + 1
+                logger.info(f"[{self.name}] {name}: {self._format_signature(signature)}")
+            else:
+                logger.warning(f"[{self.name}] {name}: probe failed")
 
         if not by_signature:
             return [], [Path(f).name for f in files]
 
         best_signature = max(by_signature.items(), key=lambda item: item[1])[0]
+        logger.info(
+            f"[{self.name}] Best signature ({by_signature[best_signature]} file(s)): "
+            f"{self._format_signature(best_signature)}"
+        )
 
         compatible = [
             file_path for file_path in files
@@ -166,6 +187,13 @@ class Channel:
             random.shuffle(files)
             if self.transcode:
                 self.shuffled_files = files
+                for file_path in files:
+                    sig = self.probe_signature(file_path)
+                    name = Path(file_path).name
+                    if sig is not None:
+                        logger.info(f"[{self.name}] {name}: {self._format_signature(sig)}")
+                    else:
+                        logger.warning(f"[{self.name}] {name}: probe failed")
             else:
                 self.shuffled_files, skipped = self.filter_copy_compatible_files(files)
                 if skipped:
