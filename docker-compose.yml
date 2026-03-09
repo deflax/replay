@@ -5,7 +5,7 @@ services:
     env_file:
       - "variables.env"
     volumes:
-      - "./srv/library:/library:ro"
+      - "/srv/library:/library:ro"
     restart: unless-stopped
     labels:
       - meta.role=replay
