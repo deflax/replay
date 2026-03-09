@@ -9,6 +9,7 @@ import asyncio
 import threading
 from pathlib import Path
 
+import json
 from quart import Quart, send_file, abort, Response
 
 from config import (
@@ -120,7 +121,7 @@ async def index():
     """Root endpoint with service info."""
     with channels_lock:
         channel_list = list(channels.keys())
-    return {
+    info = {
         'service': 'replay',
         'description': 'Multi-channel HLS streaming service',
         'channels': channel_list,
@@ -129,6 +130,7 @@ async def index():
             '/health': 'Health check'
         }
     }
+    return Response(json.dumps(info, ensure_ascii=False), content_type='application/json')
 
 
 # --- Lifecycle ---
