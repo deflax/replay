@@ -20,7 +20,6 @@ Each discovered channel gets its own `ffmpeg` process, writes HLS output under `
 - `scripts/run.sh` - container entrypoint
 - `Dockerfile` - container image build
 - `docker-compose.yml` - compose service definition used by the original stack
-- `channel.json.dist` - sample per-channel configuration
 
 ## Requirements
 
@@ -120,10 +119,11 @@ These environment variables are read in `app/config.py`:
 | `REPLAY_SCAN_INTERVAL` | `60` | Seconds between library scans |
 | `HLS_SEGMENT_TIME` | `4` | HLS segment duration in seconds |
 | `HLS_LIST_SIZE` | `20` | Number of entries kept in the live playlist |
+| `TRANSCODE_ENABLED` | `false` | Enables re-encoding for all channels when true |
 | `VIDEO_BITRATE` | `4000k` | Video bitrate used when transcoding |
 | `AUDIO_BITRATE` | `128k` | Audio bitrate used when transcoding |
 
-## Channel layout and per-channel config
+## Channel layout
 
 Each top-level directory inside `LIBRARY_DIR` becomes a channel name.
 
@@ -134,29 +134,16 @@ Example:
   /movies
     movie-a.mp4
     movie-b.mkv
-    channel.json
   /sports
     game-01.ts
 ```
 
-Per-channel overrides live in `channel.json` inside the channel directory.
-
-The easiest flow is to copy `channel.json.dist` into a channel directory and rename it to `channel.json`.
-
-Sample:
-
-```json
-{
-  "transcode": false
-}
-```
-
 Behavior:
 
-- `false` keeps copy mode enabled
-- `true` forces re-encoding through `libx264` and AAC
+- `TRANSCODE_ENABLED=false` keeps copy mode enabled
+- `TRANSCODE_ENABLED=true` forces re-encoding through `libx264` and AAC
 
-Copy mode is the default and is the cheapest option, but it only keeps files that are compatible for concat playback. The service uses `ffprobe` to compare stream signatures and skips incompatible files. If a channel contains mixed codecs, frame rates, or audio layouts, set `transcode` to `true` for that channel.
+Copy mode is the default and is the cheapest option, but it only keeps files that are compatible for concat playback. The service uses `ffprobe` to compare stream signatures and skips incompatible files. If channels contain mixed codecs, frame rates, or audio layouts, set `TRANSCODE_ENABLED=true` in `variables.env`.
 
 ## HTTP endpoints
 
@@ -172,7 +159,7 @@ Copy mode is the default and is the cheapest option, but it only keeps files tha
 - library scanning is polling-based and runs every `REPLAY_SCAN_INTERVAL` seconds
 - channel directory additions and removals are picked up on the next scan
 - channel file additions and removals trigger a channel restart on the next scan
-- editing `channel.json` by itself does not hot-reload an active channel
+- changing `TRANSCODE_ENABLED` requires restarting the service
 - `/health` always returns a JSON summary; use each channel's `ready` flag to see whether `playlist.m3u8` exists yet
 
 ## Current gaps

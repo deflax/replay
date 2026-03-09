@@ -23,22 +23,16 @@ from config import (
     SCAN_INTERVAL,
     SEGMENT_RETAIN_SECONDS,
     LIBRARY_DIR,
+    TRANSCODE_ENABLED,
 )
 
 
 @dataclass
 class Channel:
-    """Represents a single replay channel with its own ffmpeg process.
-    
-    Per-channel config can be set via a channel.json file in the source directory:
-    {
-        "transcode": false  // Use copy mode instead of re-encoding (default: false)
-    }
-    """
     name: str
     source_dir: str
     hls_dir: str
-    transcode: bool = False
+    transcode: bool = TRANSCODE_ENABLED
     ffmpeg_process: Optional[subprocess.Popen] = None
     shuffled_files: list[str] = field(default_factory=list)
     known_files: set[str] = field(default_factory=set)
@@ -46,30 +40,6 @@ class Channel:
     stop_event: threading.Event = field(default_factory=threading.Event)
     restart_event: threading.Event = field(default_factory=threading.Event)
     thread: Optional[threading.Thread] = None
-
-    def load_config(self) -> None:
-        """Load channel configuration from channel.json if present."""
-        config_path = Path(self.source_dir) / 'channel.json'
-        if not config_path.exists():
-            return
-        try:
-            with open(config_path) as f:
-                config = json.load(f)
-            if not isinstance(config, dict):
-                logger.warning(f"[{self.name}] channel.json must be a JSON object")
-                return
-            if 'transcode' in config:
-                transcode = config['transcode']
-                if isinstance(transcode, bool):
-                    self.transcode = transcode
-                    logger.info(f"[{self.name}] Config loaded: transcode={self.transcode}")
-                else:
-                    logger.warning(
-                        f"[{self.name}] Invalid channel.json value for 'transcode': "
-                        f"{transcode!r} (expected true/false)"
-                    )
-        except Exception as e:
-            logger.warning(f"[{self.name}] Failed to load channel.json: {e}")
 
     def get_video_files(self) -> list[str]:
         """Find all video files in this channel's source directory."""
@@ -458,7 +428,6 @@ def start_channel(name: str, source_dir: str):
     """Start a new channel."""
     hls_dir = f'{HLS_BASE_DIR}/{name}'
     channel = Channel(name=name, source_dir=source_dir, hls_dir=hls_dir)
-    channel.load_config()
     channel.thread = threading.Thread(
         target=run_channel_ffmpeg, args=(channel,), daemon=True
     )

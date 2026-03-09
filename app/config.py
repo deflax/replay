@@ -12,6 +12,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def get_bool_env(var_name: str, default: bool = False) -> bool:
+    value = os.environ.get(var_name)
+    if value is None:
+        return default
+
+    normalized = value.strip().lower()
+    if normalized in {'1', 'true', 'yes', 'on'}:
+        return True
+    if normalized in {'0', 'false', 'no', 'off'}:
+        return False
+
+    logger.warning(
+        "Invalid boolean value for %s: %r; using default %s",
+        var_name,
+        value,
+        default,
+    )
+    return default
+
+
 class QuietAccessFilter(logging.Filter):
     """Suppress noisy 200 OK access log lines for health checks, segments and playlists."""
 
@@ -33,6 +53,7 @@ HLS_SEGMENT_TIME = int(os.environ.get('HLS_SEGMENT_TIME', '4'))
 HLS_LIST_SIZE = int(os.environ.get('HLS_LIST_SIZE', '20'))
 VIDEO_BITRATE = os.environ.get('VIDEO_BITRATE', '4000k')
 AUDIO_BITRATE = os.environ.get('AUDIO_BITRATE', '128k')
+TRANSCODE_ENABLED = get_bool_env('TRANSCODE_ENABLED', False)
 PORT = int(os.environ.get('REPLAY_PORT', '8090'))
 SCAN_INTERVAL = int(os.environ.get('REPLAY_SCAN_INTERVAL', '60'))
 SEGMENT_RETAIN_SECONDS = HLS_SEGMENT_TIME * HLS_LIST_SIZE * 3
