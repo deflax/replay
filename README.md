@@ -74,12 +74,12 @@ http://localhost:8090/movies/playlist.m3u8
 
 ## Docker Compose
 
-The checked-in `docker-compose.yml` still reflects its origin in a larger stack. It mounts the library and loads `variables.env`, but it does not publish a host port.
+The checked-in `docker-compose.yml` mounts the library, loads `variables.env`, and publishes `8090` on the host.
 
 For a standalone setup, either:
 
 - use the `docker run` command above, or
-- add a `ports:` mapping before running `docker compose up --build`
+- run `docker compose up --build`
 
 Example:
 

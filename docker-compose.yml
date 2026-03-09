@@ -2,6 +2,8 @@ services:
   replay:
     build: .
     image: tv-replay:latest
+    ports:
+      - "8090:8090"
     env_file:
       - "variables.env"
     volumes:
