@@ -319,8 +319,10 @@ def run_channel_ffmpeg(channel: Channel):
         # Build ffmpeg command - use copy mode or transcode based on channel config
         cmd = [
             'ffmpeg',
+            '-loglevel', 'info',
+            '-err_detect', 'ignore_err',
             '-re',
-            '-fflags', '+genpts',
+            '-fflags', '+genpts+igndts+discardcorrupt',
             '-avoid_negative_ts', 'make_zero',
             '-f', 'concat',
             '-safe', '0',
@@ -345,12 +347,15 @@ def run_channel_ffmpeg(channel: Channel):
                 '-b:a', AUDIO_BITRATE,
                 '-ac', '2',
                 '-ar', '44100',
+                '-max_muxing_queue_size', '4096',
+                '-async', '1',
             ])
         else:
             # Copy mode - no re-encoding (requires compatible source files)
             cmd.extend([
                 '-c:v', 'copy',
                 '-c:a', 'copy',
+                '-max_muxing_queue_size', '4096',
             ])
 
         cmd.extend([
