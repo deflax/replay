@@ -122,6 +122,7 @@ These environment variables are read in `app/config.py`:
 | `TRANSCODE_ENABLED` | `false` | Enables re-encoding for all channels when true |
 | `VIDEO_BITRATE` | `4000k` | Video bitrate used when transcoding |
 | `AUDIO_BITRATE` | `128k` | Audio bitrate used when transcoding |
+| `FFMPEG_THREADS` | `2` | Number of threads each ffmpeg transcode process may use |
 
 ## Channel layout
 

@@ -24,6 +24,7 @@ from config import (
     SEGMENT_RETAIN_SECONDS,
     LIBRARY_DIR,
     TRANSCODE_ENABLED,
+    FFMPEG_THREADS,
 )
 
 
@@ -330,6 +331,7 @@ def run_channel_ffmpeg(channel: Channel):
         if channel.transcode:
             # Full transcoding
             cmd.extend([
+                '-threads', str(FFMPEG_THREADS),
                 '-c:v', 'libx264',
                 '-preset', 'veryfast',
                 '-tune', 'zerolatency',

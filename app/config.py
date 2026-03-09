@@ -54,6 +54,7 @@ HLS_LIST_SIZE = int(os.environ.get('HLS_LIST_SIZE', '20'))
 VIDEO_BITRATE = os.environ.get('VIDEO_BITRATE', '4000k')
 AUDIO_BITRATE = os.environ.get('AUDIO_BITRATE', '128k')
 TRANSCODE_ENABLED = get_bool_env('TRANSCODE_ENABLED', False)
+FFMPEG_THREADS = int(os.environ.get('FFMPEG_THREADS', '2'))
 PORT = int(os.environ.get('REPLAY_PORT', '8090'))
 SCAN_INTERVAL = int(os.environ.get('REPLAY_SCAN_INTERVAL', '60'))
 SEGMENT_RETAIN_SECONDS = HLS_SEGMENT_TIME * HLS_LIST_SIZE * 3
